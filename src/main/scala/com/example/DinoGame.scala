@@ -5,29 +5,89 @@ import scala.util.Random
 import javax.imageio.ImageIO
 import java.io.File
 import java.awt.Desktop
+import java.io.{FileWriter, PrintWriter, BufferedReader, FileReader}
+import scala.collection.mutable.Map
 
 object BullseyeGame extends App {
+  // Create resources directory if it doesn't exist
+  val resourcesDir = new File("src/main/resources")
+  if (!resourcesDir.exists()) {
+    resourcesDir.mkdirs()
+  }
+
+  // Create users.txt in resources directory
+  val usersFile = new File("src/main/resources/users.txt")
+  if (!usersFile.exists()) {
+    usersFile.createNewFile()
+  }
+
   SwingUtilities.invokeLater(() => {
-    val frame = new JFrame("Bullseye Game")
-    val panel = new GamePanel()
-    frame.add(panel)
-    frame.setSize(800, 400)
-    frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE)
-    frame.setVisible(true)
-    panel.startGame()
+    val loginDialog = new UserLoginDialog(null)
+    if (loginDialog.userId != null) {
+      val frame = new JFrame("Bullseye Game")
+      val panel = new GamePanel(loginDialog.userId, loginDialog.userCoins)
+      frame.add(panel)
+      frame.setSize(800, 400)
+      frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE)
+      frame.setVisible(true)
+      panel.startGame()
+    }
   })
 }
 
-class GamePanel extends JPanel with ActionListener with KeyListener {
+class UserLoginDialog(parent: JFrame) extends JDialog(parent, "User Login", true) {
+  private val panel = new JPanel(new GridLayout(0, 1))
+  private val idField = new JTextField(10)
+  private val loginButton = new JButton("Login")
+  var userId: String = null
+  var userCoins: Int = 0
+
+  private val usersFile = new File("src/main/resources/users.txt")
+
+  panel.add(new JLabel("Enter User ID:"))
+  panel.add(idField)
+  panel.add(loginButton)
+
+  loginButton.addActionListener(_ => {
+    val id = idField.getText.trim
+    if (id.nonEmpty) {
+      userId = id
+      userCoins = getUserCoins(id)
+      dispose()
+    } else {
+      JOptionPane.showMessageDialog(this, "Please enter a valid ID")
+    }
+  })
+
+  private def getUserCoins(id: String): Int = {
+    val source = scala.io.Source.fromFile("src/main/resources/users.txt")
+    try {
+      source.getLines()
+        .map(_.split(","))
+        .find(_(0) == id)
+        .map(_(1).toInt)
+        .getOrElse(0)
+    } finally {
+      source.close()
+    }
+  }
+
+  getContentPane.add(panel)
+  pack()
+  setLocationRelativeTo(parent)
+  setVisible(true)
+}
+
+class GamePanel(userId: String, initialCoins: Int) extends JPanel with ActionListener with KeyListener {
   private var timer: Timer = _
   private var bullseyeY: Int = 350 - 52
-  private val bullseyeX = 150 // Fixed X position for Bullseye, closer to the left
+  private val bullseyeX = 150
   private val MAX_JUMPS = 3
   private var jumpsRemaining = MAX_JUMPS
   private var gravity = 1
   private var velocityY = 0
   private var score = 0
-  private var coinsCollected = 0
+  private var coinsCollected = initialCoins
   private var speed = 5
   private val random = new Random()
   private var obstacles: Array[(Int, Int)] = Array.fill(2)((800, 300))
@@ -40,7 +100,7 @@ class GamePanel extends JPanel with ActionListener with KeyListener {
   private val coinHeight = 40
   private var paused = false
   private var gameOver = false
-  private var isOnGround = true // Track if Bullseye is on the ground
+  private var isOnGround = true
 
   private var backgroundImage: Image = _
   private var coinImage: Image = _
@@ -48,11 +108,56 @@ class GamePanel extends JPanel with ActionListener with KeyListener {
   private var obstacleImage1: Image = _
   private var obstacleImage2: Image = _
 
-  // High score tracking
   private var highScore = 0
 
-  // Load resources
   loadResources()
+
+  private def saveUserCoins(): Unit = {
+    val tempFile = new File("src/main/resources/users_temp.txt")
+    val reader = new BufferedReader(new FileReader("src/main/resources/users.txt"))
+    val writer = new PrintWriter(new FileWriter(tempFile))
+    
+    var updated = false
+    var line = reader.readLine()
+    
+    while (line != null) {
+      val parts = line.split(",")
+      if (parts(0) == userId) {
+        writer.println(s"$userId,$coinsCollected")
+        updated = true
+      } else {
+        writer.println(line)
+      }
+      line = reader.readLine()
+    }
+    
+    if (!updated) {
+      writer.println(s"$userId,$coinsCollected")
+    }
+    
+    reader.close()
+    writer.close()
+    
+    val usersFile = new File("src/main/resources/users.txt")
+    usersFile.delete()
+    tempFile.renameTo(usersFile)
+  }
+
+  private def loadResources(): Unit = {
+    try {
+      // Load images from the src/main/resources directory
+      val resourcePath = "src/main/resources"
+      coinImage = new ImageIcon(s"$resourcePath/coin_image.gif").getImage
+      bullseyeImage = ImageIO.read(new File(s"$resourcePath/emojisky.com-226494.png"))
+      obstacleImage1 = ImageIO.read(new File(s"$resourcePath/cart.png"))
+      obstacleImage2 = ImageIO.read(new File(s"$resourcePath/obstacle2.png"))
+      backgroundImage = ImageIO.read(new File(s"$resourcePath/bg3.jpg"))
+    } catch {
+      case e: Exception => 
+        println("Error loading resources: " + e.getMessage)
+        e.printStackTrace()
+    }
+  }
 
   def startGame(): Unit = {
     timer = new Timer(20, this)
@@ -76,16 +181,14 @@ class GamePanel extends JPanel with ActionListener with KeyListener {
 
   private def updatePhysics(): Unit = {
     if (!isOnGround) {
-      // Apply gravity when Bullseye is in the air
       velocityY += gravity
       bullseyeY += velocityY
 
-      // Check if Bullseye hits the ground
       if (bullseyeY >= 350 - bullseyeHeight) {
-        bullseyeY = 350 - bullseyeHeight // Keep Bullseye on the ground
-        velocityY = 0 // Reset velocity
-        isOnGround = true // Bullseye is on the ground
-        jumpsRemaining = MAX_JUMPS // Reset jump count
+        bullseyeY = 350 - bullseyeHeight
+        velocityY = 0
+        isOnGround = true
+        jumpsRemaining = MAX_JUMPS
       }
     }
   }
@@ -97,6 +200,7 @@ class GamePanel extends JPanel with ActionListener with KeyListener {
         new Rectangle(x, y, obstacleWidth, obstacleHeight)
       )) {
         gameOver = true
+        saveUserCoins()
         timer.stop()
       }
     }
@@ -108,6 +212,7 @@ class GamePanel extends JPanel with ActionListener with KeyListener {
       )) {
         coins(i) = (800 + random.nextInt(200), random.nextInt(250))
         coinsCollected += 1
+        saveUserCoins()
       }
     }
   }
@@ -132,7 +237,6 @@ class GamePanel extends JPanel with ActionListener with KeyListener {
       speed += 1
     }
 
-    // Update high score if current score is higher
     if (score > highScore) {
       highScore = score
     }
@@ -140,16 +244,15 @@ class GamePanel extends JPanel with ActionListener with KeyListener {
 
   private def resetRound(): Unit = {
     jumpsRemaining = MAX_JUMPS
-    bullseyeY = 350 - bullseyeHeight // Ensure Bullseye starts at the ground level
+    bullseyeY = 350 - bullseyeHeight
     velocityY = 0
-    obstacles = Array.fill(2)((800, 300)) // Reset obstacles position
-    coins = Array.fill(3)((800, random.nextInt(250))) // Reset coins position
+    obstacles = Array.fill(2)((800, 300))
+    coins = Array.fill(3)((800, random.nextInt(250)))
     score = 0
-    coinsCollected = 0
     speed = 5
     gameOver = false
     paused = false
-    isOnGround = true // Reset Bullseye to be on the ground
+    isOnGround = true
   }
 
   override def paintComponent(g: Graphics): Unit = {
@@ -166,7 +269,6 @@ class GamePanel extends JPanel with ActionListener with KeyListener {
     renderBullseye(g2d)
     renderObstacles(g2d)
     renderCoins(g2d)
-
     renderHUD(g2d)
 
     if (paused) {
@@ -223,29 +325,18 @@ class GamePanel extends JPanel with ActionListener with KeyListener {
   private def renderHUD(g2d: Graphics2D): Unit = {
     g2d.setColor(Color.BLACK)
     g2d.setFont(new Font("Arial", Font.BOLD, 20))
-    g2d.drawString(s"High Score: $highScore", 10, 20) // Display high score above score
-    g2d.drawString(s"Score: $score", 10, 40)
-    g2d.drawString(s"Coins: $coinsCollected", 10, 60)
-    g2d.drawString(s"Jumps Left: $jumpsRemaining", 10, 80)
-  }
-
-  private def loadResources(): Unit = {
-    try {
-      coinImage = new ImageIcon(getClass.getResource("/coin_image.gif")).getImage
-      bullseyeImage = ImageIO.read(getClass.getResource("/emojisky.com-226494.png"))
-      obstacleImage1 = ImageIO.read(getClass.getResource("/cart.png"))
-      obstacleImage2 = ImageIO.read(getClass.getResource("/obstacle2.png"))
-      backgroundImage = ImageIO.read(getClass.getResource("/bg3.jpg"))
-    } catch {
-      case e: Exception => println("Error loading resources: " + e.getMessage)
-    }
+    g2d.drawString(s"User ID: $userId", 10, 20)
+    g2d.drawString(s"High Score: $highScore", 10, 40)
+    g2d.drawString(s"Score: $score", 10, 60)
+    g2d.drawString(s"Coins: $coinsCollected", 10, 80)
+    g2d.drawString(s"Jumps Left: $jumpsRemaining", 10, 100)
   }
 
   override def keyPressed(e: KeyEvent): Unit = {
     if (e.getKeyCode == KeyEvent.VK_SPACE && jumpsRemaining > 0) {
-      velocityY = -15  // Set upward velocity for the jump
-      jumpsRemaining -= 1 // Decrease jump count
-      isOnGround = false // Bullseye is in the air now
+      velocityY = -15
+      jumpsRemaining -= 1
+      isOnGround = false
     }
 
     if (e.getKeyCode == KeyEvent.VK_P) {
@@ -253,14 +344,13 @@ class GamePanel extends JPanel with ActionListener with KeyListener {
     }
 
     if (e.getKeyCode == KeyEvent.VK_R && gameOver) {
-      resetRound() // Reset everything to start a new game
+      resetRound()
       timer.start()
     }
 
     if (e.getKeyCode == KeyEvent.VK_T && gameOver) {
-      // Redirect to a local HTML file after pressing 'T'
       try {
-        val file = new File("src/main/resources/target.html") // Update with the correct path to your HTML file
+        val file = new File("src/main/resources/target.html")
         if (file.exists()) {
           if (Desktop.isDesktopSupported) {
             Desktop.getDesktop().browse(file.toURI)
