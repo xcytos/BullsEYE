@@ -1,83 +1,86 @@
-Bullseye Game with Redemption Shop - GitHub Repository Description
-A dynamic side-scrolling game with integrated reward redemption system!
+🎯 Bullseye Game with Redemption Shop(TARGET COMPANY BASED)
+A dynamic side-scrolling coin collection game integrated with a real-time redemption shop — built to merge fun gameplay with virtual rewards!
 
-This project features a continuous runner game where players collect coins and redeem them for discounts on products in a virtual store. Built with Scala for game logic and HTML/CSS/JS for the redemption shop.
+🕹️ Overview
+Bullseye Game is a continuous runner where players control a bullseye icon, collect coins, avoid obstacles, and later redeem their earned coins in an interactive web-based shop. The game logic is implemented in Scala, while the redemption shop leverages HTML, CSS, and JavaScript for a smooth and responsive user experience.
 
 🎮 Game Features
-Player Character: Control a bullseye icon that jumps to avoid obstacles
+Player Control: Navigate a bullseye character with smooth jump and gravity mechanics
 
-Coin Collection: Collect coins to increase your balance
+Coin Collection: Accumulate coins to build up your in-game balance
 
-Obstacle Avoidance: Dodge moving carts to survive
+Obstacle Avoidance: Dodge moving carts and survive as long as possible
 
-User Profiles: Persistent coin balances stored in users.txt
+User Profiles: User-specific progress saved in users.txt
 
-Physics System: Gravity and jumping mechanics with limited jumps
+Physics Engine: Realistic gravity and limited jumps system
 
-Progressive Difficulty: Speed increases as your score grows
+Progressive Difficulty: Speed increases with higher scores
 
-High Score Tracking: Compete against your best performance
+High Score System: Track and beat your personal bests
 
 🛍️ Redemption Shop Features
-Product Catalog: Browse shirts, appliances, electronics
+Product Catalog: Browse virtual products like apparel, electronics, and home appliances
 
-Discount System: Redeem coins for 10% or 20% discounts
+Discount Rewards: Redeem coins for 10%–20% discount codes
 
-Order Processing: Complete purchases with applied discounts
+Order Processing: Simulated checkout with applied discounts
 
-Responsive UI: Clean, Target®-inspired interface
+Target®-Inspired UI: Clean and responsive design for a real-store feel
 
 ⚙️ Technical Components
 Scala Game Engine:
+Built with Scala Swing
 
-Swing-based graphics
-
-Collision detection
+Collision detection and physics simulation
 
 Persistent user data storage
 
-Physics simulation (gravity/jumping)
+Real-time score and difficulty tracking
 
-HTML Redemption Shop:
+HTML/CSS/JS Redemption Shop:
+Responsive interface with modern styling
 
-Modern CSS styling
+Interactive product displays
 
-Interactive product cards
+Real-time discount logic based on user’s coin balance
 
-Dynamic discount application
+Order confirmation and simulated checkout flow
 
-Order confirmation system
+🔄 Game–Shop Integration
+Press T after game over to access the redemption shop
 
-🔄 Game-to-Shop Integration
-Press 'T' after game over to launch redemption shop
+Coin balance syncs automatically between the game and the shop
 
-Coin balances sync between game and shop
-
-Discounts applied to purchases based on collected coins
+Redeemed discounts are applied to eligible purchases
 
 🚀 How to Run
-Launch BullseyeGame.scala
+Open BullseyeGame.scala in your Scala-supported IDE
 
-Login with user ID
+Run the game and login using a user ID
 
-Collect coins by jumping over obstacles
+Jump over obstacles to collect coins
 
-After game over, press 'T' to open shop
+After the game ends, press T to open the shop
 
-Redeem coins for discounts on products
+Use collected coins to redeem discounts in the shop
 
-📁 Project Structure
-text
+
+Project Structure
 src/
 ├── main/
-│   ├── resources/          # Game assets & data files
-│   │   ├── bg3.jpg         # Background image
-│   │   ├── coin_image.gif  # Coin sprite
-│   │   ├── users.txt       # User database
-│   │   └── target.html     # Redemption shop
+│   ├── resources/               # Game assets & data
+│   │   ├── bg3.jpg              # Background image
+│   │   ├── coin_image.gif       # Coin sprite
+│   │   ├── users.txt            # User data file
+│   │   └── target.html          # Redemption shop frontend
 │   └── scala/
-│       └── BullseyeGame.scala # Main game logic
-🛠️ Dependencies
+│       └── DinoGame.scala   # Core game logic
+
+
+
+
+🛠️ Requirements
 Java 8+
 
 Scala 2.13
