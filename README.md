@@ -5,37 +5,56 @@ This project features a continuous runner game where players collect coins and r
 
 🎮 Game Features
 Player Character: Control a bullseye icon that jumps to avoid obstacles
+
 Coin Collection: Collect coins to increase your balance
+
 Obstacle Avoidance: Dodge moving carts to survive
+
 User Profiles: Persistent coin balances stored in users.txt
+
 Physics System: Gravity and jumping mechanics with limited jumps
+
 Progressive Difficulty: Speed increases as your score grows
+
 High Score Tracking: Compete against your best performance
 
 🛍️ Redemption Shop Features
 Product Catalog: Browse shirts, appliances, electronics
+
 Discount System: Redeem coins for 10% or 20% discounts
+
 Order Processing: Complete purchases with applied discounts
+
 Responsive UI: Clean, Target®-inspired interface
 
 ⚙️ Technical Components
 Scala Game Engine:
+
 Swing-based graphics
+
 Collision detection
+
 Persistent user data storage
+
 Physics simulation (gravity/jumping)
 
 HTML Redemption Shop:
+
 Modern CSS styling
+
 Interactive product cards
+
 Dynamic discount application
+
 Order confirmation system
 
 🔄 Game-to-Shop Integration
 Press 'T' after game over to launch redemption shop
 
 Coin balances sync between game and shop
+
 Discounts applied to purchases based on collected coins
+
 🚀 How to Run
 Launch BullseyeGame.scala
 
